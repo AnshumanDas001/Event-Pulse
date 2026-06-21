@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{if(localStorage.getItem('eventpulse-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Model Validation — Event Plan Optima</title>
+<meta name="description" content="Two real, cross-validated ML models — Logistic Regression and Ridge regression — with honest holdout metrics and Random Forest benchmarks published." />
+
+<link rel="stylesheet" href="assets/leaflet.css" />
+<link rel="stylesheet" href="assets/fonts.css" />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+<div class="loading-veil" id="loadingVeil">LOADING EVENT DATA…</div>
+
+<div class="skip-disclaimer">
+  <strong>Prototype</strong> — built on a real, anonymized 6-month Bengaluru Traffic Police event export (Nov 2023–Apr 2024). All map points are aggregated to ~100m grid cells; no individually identifiable record is shown.
+</div>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">Event Plan <span class="dot">Optima</span></div>
+      <div class="brand-sub">EVENT CONGESTION INTELLIGENCE — BENGALURU TRAFFIC POLICE</div>
+    </div>
+    <div class="status-cluster">
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">
+        <svg class="icon-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
+      <div class="status-pill"><span class="pulse-dot"></span> SYSTEM OPERATIONAL</div>
+      <div class="status-pill">IST <span id="clock">--:--:--</span></div>
+    </div>
+  </header>
+<nav class="topnav">
+  <a href="index.html" class="topnav-link">Overview</a>
+  <a href="forecast.html" class="topnav-link">Forecast</a>
+  <a href="outlook.html" class="topnav-link">Outlook</a>
+  <a href="insights.html" class="topnav-link">Insights</a>
+  <a href="models.html" class="topnav-link active">Models</a>
+  <a href="liveops.html" class="topnav-link">Live Ops</a>
+</nav>
+  <section class="kpi-strip" id="kpiStrip" aria-label="Headline statistics">
+    <!-- filled by app.js -->
+  </section>
+
+  <div class="section-head" style="margin-top:0;">
+    <div class="section-title">Model Validation</div>
+    <div class="section-note">Two trained, cross-validated models — not hand-tuned rules</div>
+  </div>
+
+  <div class="model-grid" id="modelGrid"></div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Why These Two Targets</div>
+    </div>
+    <div class="panel-body" style="color: var(--text-1); font-size: 13px; line-height: 1.6;">
+      <p style="margin: 0 0 12px;">We first tried training on <code>priority</code> — and found it's almost
+      perfectly determined by <code>corridor</code> alone: every named corridor is ~100% "High",
+      "Non-corridor" is ~99.8% "Low". It's an operational designation in the source system, not a judgment
+      call, and a model "predicting" it would report a meaningless 99.9% AUC — measuring a database join,
+      not a prediction.</p>
+      <p style="margin: 0;">So this project doesn't train on priority at all. Instead it models the two
+      signals in this dataset that carry genuine, non-trivial uncertainty: whether an event will require a
+      <b>road closure</b> (varies continuously from 4.3% for breakdowns to 80% for VIP movement, with no
+      deterministic rule), and how long an event will <b>take to resolve</b> — honestly the noisiest signal
+      here, which is why the dashboard always shows it as a range, not a single number.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>Built for the <b>Event-Driven Congestion (Planned &amp; Unplanned)</b> problem statement · Event Plan Optima, 2026</div>
+    <div>Data: anonymized Astram / B-TRAC event export, 8,173 records, Nov 2023 – Apr 2024 · Static client-side prototype, no backend required</div>
+  </div>
+
+</div>
+
+<script src="assets/theme.js"></script>
+<script src="assets/engine.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

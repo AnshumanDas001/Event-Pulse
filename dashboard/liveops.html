@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{if(localStorage.getItem('eventpulse-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Live Ops & Learning Loop — Event Plan Optima</title>
+<meta name="description" content="Resolve live incidents with their actual outcome to score the forecast's own accuracy, plus the live triage queue that feeds it." />
+
+<link rel="stylesheet" href="assets/leaflet.css" />
+<link rel="stylesheet" href="assets/fonts.css" />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+<div class="loading-veil" id="loadingVeil">LOADING EVENT DATA…</div>
+
+<div class="skip-disclaimer">
+  <strong>Prototype</strong> — built on a real, anonymized 6-month Bengaluru Traffic Police event export (Nov 2023–Apr 2024). All map points are aggregated to ~100m grid cells; no individually identifiable record is shown.
+</div>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">Event Plan <span class="dot">Optima</span></div>
+      <div class="brand-sub">EVENT CONGESTION INTELLIGENCE — BENGALURU TRAFFIC POLICE</div>
+    </div>
+    <div class="status-cluster">
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">
+        <svg class="icon-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
+      <div class="status-pill"><span class="pulse-dot"></span> SYSTEM OPERATIONAL</div>
+      <div class="status-pill">IST <span id="clock">--:--:--</span></div>
+    </div>
+  </header>
+<nav class="topnav">
+  <a href="index.html" class="topnav-link">Overview</a>
+  <a href="forecast.html" class="topnav-link">Forecast</a>
+  <a href="outlook.html" class="topnav-link">Outlook</a>
+  <a href="insights.html" class="topnav-link">Insights</a>
+  <a href="models.html" class="topnav-link">Models</a>
+  <a href="liveops.html" class="topnav-link active">Live Ops</a>
+</nav>
+  <section class="kpi-strip" id="kpiStrip" aria-label="Headline statistics">
+    <!-- filled by app.js -->
+  </section>
+
+  <div class="section-head" style="margin-top:0;">
+    <div class="section-title">Live Operations &amp; Learning Loop</div>
+    <div class="section-note">Live triage feeds directly into the post-event feedback loop</div>
+  </div>
+
+  <div class="feedback-stats" id="feedbackStats"></div>
+
+  <div class="lower-grid">
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Post-Event Learning Loop</div>
+      </div>
+      <div class="loop-body">
+        <p class="section-note" style="margin:0 0 12px;">Resolve an incident from the Live Operations Feed with its actual outcome — Event Plan Optima compares it against its own forecast and updates this session's accuracy.</p>
+        <div class="loop-row">
+          <select id="loopEventSelect"></select>
+        </div>
+        <div class="loop-row">
+          <input type="number" id="loopActualDuration" placeholder="Actual duration (hours)" min="0" step="0.1" />
+          <button class="loop-btn" id="loopSubmitBtn">Submit Outcome</button>
+        </div>
+        <div class="accuracy-meter">
+          <div class="top-row">
+            <span class="section-note">Session forecast accuracy</span>
+            <span class="big" id="accuracyValue">—</span>
+          </div>
+          <div class="accuracy-bar"><div class="accuracy-bar-fill" id="accuracyFill" style="width:0%"></div></div>
+        </div>
+        <div class="loop-log" id="loopLog"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Live Operations Feed</div>
+        <div class="section-note">Sample, seeded from historical records</div>
+      </div>
+      <p class="feed-intro">Each row already has a known priority and closure status, so Event Plan Optima triages it directly rather than predicting. Click <b>Resolve</b> to send it to the Learning Loop on the left.</p>
+      <div class="feed-list" id="feedList"></div>
+    </div>
+
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Triage vs. Forecast — Why Two Engines</div>
+    </div>
+    <div class="panel-body" style="color: var(--text-1); font-size: 13px; line-height: 1.6;">
+      <p style="margin: 0;">The feed deliberately does <b>not</b> call the ML models. An incident
+      already on the board already has a known priority flag and a known closure status — those are facts,
+      not predictions, so triage is a simple, direct lookup (8 personnel for a High-priority incident, +2 if
+      a closure is already in effect). The Logistic Regression and Ridge regression models exist for the
+      opposite problem: an event that <b>hasn't happened yet</b>, on the Forecast page, where cause,
+      corridor, and time are known but priority and closure are not. Forecasting and triage are different
+      problems with different available information, so Event Plan Optima treats them as two distinct tools
+      sharing the same underlying historical profile — and the feedback loop above is what ties them
+      together: every resolved incident is a data point on how good the forecast side actually is.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>Built for the <b>Event-Driven Congestion (Planned &amp; Unplanned)</b> problem statement · Event Plan Optima, 2026</div>
+    <div>Data: anonymized Astram / B-TRAC event export, 8,173 records, Nov 2023 – Apr 2024 · Static client-side prototype, no backend required</div>
+  </div>
+
+</div>
+
+<script src="assets/theme.js"></script>
+<script src="assets/engine.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

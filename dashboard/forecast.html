@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{if(localStorage.getItem('eventpulse-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Forecast a New Event — Event Plan Optima</title>
+<meta name="description" content="Score a planned or unplanned event before it happens: Severity Index, duration, personnel, barricades, and diversion, all traced to real history." />
+
+<link rel="stylesheet" href="assets/leaflet.css" />
+<link rel="stylesheet" href="assets/fonts.css" />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+<div class="loading-veil" id="loadingVeil">LOADING EVENT DATA…</div>
+
+<div class="skip-disclaimer">
+  <strong>Prototype</strong> — built on a real, anonymized 6-month Bengaluru Traffic Police event export (Nov 2023–Apr 2024). All map points are aggregated to ~100m grid cells; no individually identifiable record is shown.
+</div>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">Event Plan <span class="dot">Optima</span></div>
+      <div class="brand-sub">EVENT CONGESTION INTELLIGENCE — BENGALURU TRAFFIC POLICE</div>
+    </div>
+    <div class="status-cluster">
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">
+        <svg class="icon-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
+      <div class="status-pill"><span class="pulse-dot"></span> SYSTEM OPERATIONAL</div>
+      <div class="status-pill">IST <span id="clock">--:--:--</span></div>
+    </div>
+  </header>
+<nav class="topnav">
+  <a href="index.html" class="topnav-link">Overview</a>
+  <a href="forecast.html" class="topnav-link active">Forecast</a>
+  <a href="outlook.html" class="topnav-link">Outlook</a>
+  <a href="insights.html" class="topnav-link">Insights</a>
+  <a href="models.html" class="topnav-link">Models</a>
+  <a href="liveops.html" class="topnav-link">Live Ops</a>
+</nav>
+  <section class="kpi-strip" id="kpiStrip" aria-label="Headline statistics">
+    <!-- filled by app.js -->
+  </section>
+
+  <div class="main-grid">
+
+    <div class="panel map-panel">
+      <div class="panel-header">
+        <div class="panel-title">Event Density Map</div>
+        <div class="corridor-select-wrap">
+          <select id="corridorFilter" aria-label="Filter map by corridor">
+            <option value="">All corridors</option>
+          </select>
+        </div>
+      </div>
+      <div id="map"></div>
+      <div class="map-legend" id="mapLegend"></div>
+    </div>
+
+    <div class="panel forecast-panel">
+      <div class="panel-header">
+        <div class="panel-title">Forecast a New Event</div>
+      </div>
+      <div class="panel-body">
+
+        <div class="field">
+          <label for="eventKind">Event Type</label>
+          <select id="eventKind">
+            <option value="planned">Planned (rally, festival, construction…)</option>
+            <option value="unplanned">Unplanned (breakdown, accident, flooding…)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="eventCause">Cause / Category</label>
+          <select id="eventCause"></select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="eventCorridor">Corridor</label>
+            <select id="eventCorridor"></select>
+          </div>
+          <div class="field">
+            <label for="eventTime">Expected Start Time</label>
+            <input type="time" id="eventTime" value="18:00" />
+          </div>
+        </div>
+
+        <div class="field" id="scaleField">
+          <label>Expected Scale</label>
+          <div class="scale-row" id="scaleRow">
+            <div class="scale-btn" data-scale="0.7">Small</div>
+            <div class="scale-btn active" data-scale="1.0">Medium</div>
+            <div class="scale-btn" data-scale="1.4">Large</div>
+            <div class="scale-btn" data-scale="1.8">Mega</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="toggle-row">
+            <span>Requires road closure</span>
+            <label class="switch">
+              <input type="checkbox" id="closureToggle" />
+              <span class="track"></span>
+            </label>
+          </div>
+          <div class="ml-hint" id="closureHint">Model estimate: —</div>
+        </div>
+
+        <button class="btn-primary" id="forecastBtn">Generate Deployment Plan</button>
+
+        <div class="result-card" id="resultCard">
+          <div class="result-head">
+            <div class="signal-light" id="resultSignal">
+              <span class="lamp red"></span><span class="lamp amber"></span><span class="lamp green"></span>
+            </div>
+            <div>
+              <div class="result-band-label" id="resultBandLabel">—</div>
+              <div class="result-band-sub" id="resultBandSub">—</div>
+            </div>
+          </div>
+          <div class="result-grid">
+            <div class="result-stat"><div class="v" id="resDuration">—</div><div class="l">Expected Duration</div></div>
+            <div class="result-stat"><div class="v" id="resManpower">—</div><div class="l">Recommended Personnel</div></div>
+          </div>
+          <div class="result-section">
+            <h4>Suggested Barricade / Staging Points</h4>
+            <ul class="barricade-list" id="barricadeList"></ul>
+          </div>
+          <div class="result-section">
+            <h4>Diversion Recommendation</h4>
+            <div class="diversion-box" id="diversionBox"></div>
+          </div>
+          <div class="methodology-note" id="methodologyNote"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div>Built for the <b>Event-Driven Congestion (Planned &amp; Unplanned)</b> problem statement · Event Plan Optima, 2026</div>
+    <div>Data: anonymized Astram / B-TRAC event export, 8,173 records, Nov 2023 – Apr 2024 · Static client-side prototype, no backend required</div>
+  </div>
+
+</div>
+<script src="assets/leaflet.js"></script>
+<script src="assets/theme.js"></script>
+<script src="assets/engine.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
