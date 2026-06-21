@@ -1,4 +1,4 @@
-# EventPulse
+# Event Plan Optima
 ### Event Congestion Intelligence for Bengaluru Traffic Police
 
 Forecasts the traffic impact of **planned** events (rallies, festivals, construction)
